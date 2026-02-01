@@ -472,6 +472,7 @@ button:hover, .button:hover {
     margin-bottom: 0.5rem;
     align-items: center;
     justify-content: center;
+    transition: transform 0.2s ease;
 }
 
 .row-label {
@@ -480,6 +481,7 @@ button:hover, .button:hover {
     color: #6b7280;
     flex-shrink: 0;
     font-weight: 500;
+    transition: transform 0.2s ease;
 }
 
 /* Seats */
