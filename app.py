@@ -191,6 +191,7 @@ def generate_chart_from_form() -> dict:
 
     # Prepare data for templates
     chart_json = encode_chart(chart)
+    stagger_offsets = calculate_stagger_offsets(chart)
 
     return {
         'chart': chart,
@@ -204,7 +205,8 @@ def generate_chart_from_form() -> dict:
         'staggered': staggered,
         'curved': curved,
         'aisle_after': aisle_after,
-        'singers_data': request.form.get('singers_data', '')
+        'singers_data': request.form.get('singers_data', ''),
+        'stagger_offsets': stagger_offsets
     }
 
 
@@ -227,6 +229,8 @@ def get_chart_data_from_form() -> dict:
     aisle_str = request.form.get('aisle_after', '').strip()
     aisle_after = int(aisle_str) if aisle_str else None
 
+    stagger_offsets = calculate_stagger_offsets(chart)
+
     return {
         'chart': chart,
         'chart_data': chart_json,
@@ -239,8 +243,38 @@ def get_chart_data_from_form() -> dict:
         'aisle_after': aisle_after,
         'flipped': flipped,
         'staggered': staggered,
-        'singers_data': request.form.get('singers_data', '')
+        'singers_data': request.form.get('singers_data', ''),
+        'stagger_offsets': stagger_offsets
     }
+
+
+def calculate_stagger_offsets(chart) -> list[bool]:
+    """
+    Calculate which rows need stagger offset for proper brick pattern.
+
+    The offset depends on singer count parity:
+    - Same parity as previous row: centering aligns them, need manual offset
+    - Different parity: centering naturally offsets by ~half a seat
+    """
+    if not chart:
+        return []
+
+    offsets = [False]  # First row has no offset
+
+    for i in range(1, len(chart)):
+        current_count = sum(1 for seat in chart[i] if seat.singer)
+        prev_count = sum(1 for seat in chart[i-1] if seat.singer)
+
+        same_parity = (current_count % 2) == (prev_count % 2)
+
+        if same_parity:
+            # Centering aligns them - need opposite offset from previous row
+            offsets.append(not offsets[i-1])
+        else:
+            # Centering already staggers them - keep same offset as previous row
+            offsets.append(offsets[i-1])
+
+    return offsets
 
 
 def encode_chart(chart) -> str:

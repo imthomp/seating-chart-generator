@@ -28,9 +28,13 @@
         }
         {% endfor %}
 
-        /* Stagger offset = half of (seat width + gap) = 64px for proper brick pattern */
-        .chart-container.staggered .chart-row:nth-child(even) {
-            margin-left: 64px;
+        /* Stagger: half of (seat width + gap) = (120 + 8) / 2 = 64px */
+        .chart-container.staggered .chart-row.stagger-offset {
+            transform: translateX(64px);
+        }
+        /* Keep row labels aligned when staggered */
+        .chart-container.staggered .chart-row.stagger-offset .row-label {
+            transform: translateX(-64px);
         }
 
         /* Seat position numbers */
@@ -74,7 +78,7 @@
             <div class="chart-wrapper{% if flipped %} flipped{% endif %}">
                 <div class="chart-container{% if staggered %} staggered{% endif %}">
                     {% for row in chart %}
-                        <div class="chart-row">
+                        <div class="chart-row{% if stagger_offsets[loop.index0] %} stagger-offset{% endif %}">
                             <span class="row-label">Row {{ loop.revindex }}</span>
                             {% for seat in row %}
                                 {% if seat.singer %}
