@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choir Seating Chart Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container container-narrow">
+        <h1>Choir Seating Chart Generator</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>Upload Singer Roster</h2>
+            <p>Upload a CSV file with the following columns:</p>
+            <ul>
+                <li><strong>name</strong> - Singer's name</li>
+                <li><strong>voice_part</strong> - Voice part label (Soprano, Alto 1, Tenor 2, etc.)</li>
+                <li><strong>height</strong> - Height in inches (supports decimals like 66.5)</li>
+            </ul>
+
+            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" id="file" accept=".csv" required>
+                    <label for="file" class="file-label">Choose CSV file...</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Upload & Continue</button>
+            </form>
+
+            <div class="example-csv">
+                <h4>Example CSV Format</h4>
+                <pre>name,voice_part,height
+John Smith,Tenor 1,72
+Jane Doe,Soprano 2,64.5
+Bob Johnson,Bass,74
+Alice Brown,Alto 1,66.5</pre>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

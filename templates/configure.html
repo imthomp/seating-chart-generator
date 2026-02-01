@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Seating Chart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .part-order-list {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .part-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #dbeafe;
+            border: 2px solid #93c5fd;
+            border-radius: 8px;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.15s;
+        }
+        .part-item:hover {
+            background: #bfdbfe;
+        }
+        .part-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        .part-item.drag-over {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .drag-handle {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        .part-name {
+            font-weight: 500;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container container-narrow">
+        <h1>Configure Seating Chart</h1>
+        <p class="subtitle">{{ num_singers }} singers loaded</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('preview') }}" method="post" class="config-form">
+            <input type="hidden" name="singers_data" value="{{ singers_data }}">
+
+            <input type="hidden" name="layout" value="side-by-side">
+
+            <div class="form-section">
+                <h2>Voice Part Order</h2>
+                <p>Drag to reorder parts from left to right.</p>
+
+                <div class="part-order-list" id="part-order-list">
+                    {% for part in parts %}
+                    <div class="part-item" draggable="true" data-part="{{ part }}">
+                        <span class="drag-handle">&#9776;</span>
+                        <span class="part-name">{{ part }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="part_order" name="part_order" value="{{ parts | join(', ') }}">
+            </div>
+
+            <div class="form-section">
+                <h2>Dimensions</h2>
+                <p>Leave blank for auto-calculation, or specify for fixed seating.</p>
+
+                <div class="dimension-inputs">
+                    <div class="form-group">
+                        <label for="rows">Number of rows:</label>
+                        <input type="number" id="rows" name="rows"
+                               min="1" max="50" placeholder="Auto">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_per_row">Max per row:</label>
+                        <input type="number" id="max_per_row" name="max_per_row"
+                               min="1" max="100" placeholder="Auto">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="row_sizes">Or specify seats per row (back to front):</label>
+                    <input type="text" id="row_sizes" name="row_sizes"
+                           placeholder="e.g., 16, 14, 12, 10">
+                    <p class="input-hint">Comma-separated. Overrides rows/max settings above.</p>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Start Over</a>
+                <button type="submit" class="btn btn-primary">Preview Chart</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const list = document.getElementById('part-order-list');
+        const hiddenInput = document.getElementById('part_order');
+        let draggedItem = null;
+
+        function updateHiddenInput() {
+            const parts = Array.from(list.querySelectorAll('.part-item'))
+                .map(item => item.dataset.part);
+            hiddenInput.value = parts.join(', ');
+        }
+
+        list.querySelectorAll('.part-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                item.classList.add('dragging');
+            });
+
+            item.addEventListener('dragend', (e) => {
+                item.classList.remove('dragging');
+                list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                draggedItem = null;
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (draggedItem && draggedItem !== item) {
+                    item.classList.add('drag-over');
+                }
+            });
+
+            item.addEventListener('dragleave', (e) => {
+                item.classList.remove('drag-over');
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                item.classList.remove('drag-over');
+                if (draggedItem && draggedItem !== item) {
+                    const allItems = Array.from(list.querySelectorAll('.part-item'));
+                    const draggedIdx = allItems.indexOf(draggedItem);
+                    const targetIdx = allItems.indexOf(item);
+
+                    if (draggedIdx < targetIdx) {
+                        item.parentNode.insertBefore(draggedItem, item.nextSibling);
+                    } else {
+                        item.parentNode.insertBefore(draggedItem, item);
+                    }
+                    updateHiddenInput();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

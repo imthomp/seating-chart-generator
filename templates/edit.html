@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Chart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        {% set colors = [
+            ('#e3f2fd', '#64b5f6'),
+            ('#e8f5e9', '#81c784'),
+            ('#fff3e0', '#ffb74d'),
+            ('#ffebee', '#e57373'),
+            ('#f3e5f5', '#ba68c8'),
+            ('#e0f7fa', '#4dd0e1'),
+            ('#fce4ec', '#f06292'),
+            ('#e8eaf6', '#7986cb')
+        ] %}
+        {% for part in part_order %}
+        {% set color = colors[loop.index0 % colors|length] %}
+        .seat.part-{{ loop.index0 }} {
+            background-color: {{ color[0] }};
+            border-color: {{ color[1] }};
+        }
+        .legend-color.part-{{ loop.index0 }} {
+            background-color: {{ color[0] }};
+            border-color: {{ color[1] }};
+        }
+        {% endfor %}
+
+        .seat.draggable {
+            cursor: grab;
+        }
+        .seat.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        .seat.drag-over {
+            outline: 3px dashed #3498db;
+            outline-offset: -3px;
+        }
+        .seat.selected {
+            outline: 3px solid #2c3e50;
+            outline-offset: -3px;
+        }
+        .edit-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .edit-instructions p {
+            margin: 0;
+            color: #856404;
+        }
+        .chart-options {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .chart-container.staggered .chart-row:nth-child(even) {
+            margin-left: 60px;
+        }
+        .seat.aisle-before {
+            margin-left: 40px;
+        }
+        /* Curved rows - arc effect centered on conductor */
+        .chart-container.curved .chart-row {
+            justify-content: center;
+        }
+        .chart-container.curved .seat {
+            transform-origin: center 400px;
+            transition: transform 0.2s;
+        }
+
+        /* Chart panel - combined container */
+        .chart-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            overflow: visible;
+        }
+        .chart-container {
+            box-shadow: none;
+            padding: 0;
+            background: transparent;
+        }
+        .chart-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chart-row {
+            justify-content: center;
+        }
+        /* Conductor label as small square */
+        .conductor-label {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .chart-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: center;
+        }
+        .chart-footer .legend-items {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        /* Fixed seat sizes */
+        .seat {
+            width: 120px;
+            min-width: 120px;
+            max-width: 120px;
+            position: relative;
+        }
+        /* Seat position numbers */
+        .seat-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 0.6rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        /* Height toggle */
+        .hide-heights .singer-height {
+            display: none;
+        }
+
+        /* Edit modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            min-width: 300px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        .modal h3 {
+            margin-bottom: 1rem;
+        }
+        .modal-field {
+            margin-bottom: 1rem;
+        }
+        .modal-field label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .modal-field select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Seating Chart</h1>
+            <p class="subtitle">{{ num_singers }} singers | {{ rows }} rows</p>
+        </div>
+
+        <div class="edit-instructions">
+            <p><strong>Drag and drop</strong> singers to swap positions, <strong>click two seats</strong> to swap them, or <strong>double-click</strong> a singer to change their voice part.</p>
+        </div>
+
+        <!-- Voice part edit modal -->
+        <div class="modal-overlay" id="edit-modal">
+            <div class="modal">
+                <h3>Edit Singer</h3>
+                <div class="modal-field">
+                    <label>Name</label>
+                    <strong id="modal-name"></strong>
+                </div>
+                <div class="modal-field">
+                    <label for="modal-part">Voice Part</label>
+                    <select id="modal-part">
+                        {% for part in part_order %}
+                        <option value="{{ part }}">{{ part }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="savePart()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-options">
+            <label class="checkbox-option">
+                <input type="checkbox" id="flip-toggle" {% if flipped %}checked{% endif %}>
+                <span>Flip chart</span>
+            </label>
+            <label class="checkbox-option">
+                <input type="checkbox" id="stagger-toggle" {% if staggered %}checked{% endif %}>
+                <span>Stagger rows</span>
+            </label>
+            <label class="checkbox-option">
+                <input type="checkbox" id="curved-toggle" {% if curved %}checked{% endif %}>
+                <span>Curved rows</span>
+            </label>
+            <label class="checkbox-option">
+                <input type="checkbox" id="height-toggle" checked>
+                <span>Show heights</span>
+            </label>
+        </div>
+
+        <div class="chart-panel">
+            <div class="chart-wrapper{% if flipped %} flipped{% endif %}">
+                <div class="chart-container{% if staggered %} staggered{% endif %}{% if curved %} curved{% endif %}" id="chart">
+                    {% for row in chart %}
+                        <div class="chart-row">
+                            <span class="row-label">Row {{ loop.revindex }}</span>
+                            {% for seat in row %}
+                                {% set is_after_aisle = aisle_after and seat.position == aisle_after %}
+                                {% if seat.singer %}
+                                    {% set part_idx = part_order.index(seat.singer.voice_part) if seat.singer.voice_part in part_order else 0 %}
+                                    <div class="seat part-{{ part_idx }} draggable{% if is_after_aisle %} aisle-before{% endif %}"
+                                         draggable="true"
+                                         data-row="{{ seat.row }}"
+                                         data-pos="{{ seat.position }}"
+                                         data-singer='{{ {"name": seat.singer.name, "voice_part": seat.singer.voice_part, "height": seat.singer.height} | tojson }}'>
+                                        <span class="seat-number">{{ loop.index }}</span>
+                                        <span class="singer-name">{{ seat.singer.name }}</span>
+                                        <span class="singer-info"><span class="singer-part">{{ seat.singer.voice_part }}</span><span class="singer-height"> | {{ seat.singer.height_display }}</span></span>
+                                    </div>
+                                {% else %}
+                                    <div class="seat empty{% if is_after_aisle %} aisle-before{% endif %}"
+                                         data-row="{{ seat.row }}"
+                                         data-pos="{{ seat.position }}"
+                                         data-singer="null">
+                                        <span class="seat-number">{{ loop.index }}</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="conductor-label">Conductor</div>
+            </div>
+
+            <div class="chart-footer">
+                <div class="legend-items">
+                    {% for part in part_order %}
+                    <div class="legend-item">
+                        <span class="legend-color part-{{ loop.index0 }}"></span>
+                        <span>{{ part }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="chart_data" id="chart_data" value="{{ chart_data }}">
+        <input type="hidden" name="singers_data" value="{{ singers_data }}">
+        <input type="hidden" name="part_order" value="{{ part_order | join(', ') }}">
+        <input type="hidden" name="layout" value="{{ layout }}">
+        <input type="hidden" name="num_singers" value="{{ num_singers }}">
+        <input type="hidden" name="flipped" value="{{ 'true' if flipped else 'false' }}">
+        <input type="hidden" name="staggered" value="{{ 'true' if staggered else 'false' }}">
+        <input type="hidden" name="curved" value="{{ 'true' if curved else 'false' }}">
+        <input type="hidden" name="aisle_after" value="{{ aisle_after or '' }}">
+
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Start Over</a>
+            <button type="button" onclick="window.print()" class="btn btn-success">Export PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Flip toggle functionality
+        document.getElementById('flip-toggle').addEventListener('change', function() {
+            const wrapper = document.querySelector('.chart-wrapper');
+            const hiddenFlipped = document.querySelector('input[name="flipped"]');
+            if (this.checked) {
+                wrapper.classList.add('flipped');
+                hiddenFlipped.value = 'true';
+            } else {
+                wrapper.classList.remove('flipped');
+                hiddenFlipped.value = 'false';
+            }
+        });
+
+        // Stagger toggle functionality
+        document.getElementById('stagger-toggle').addEventListener('change', function() {
+            const container = document.querySelector('.chart-container');
+            const hiddenStaggered = document.querySelector('input[name="staggered"]');
+            if (this.checked) {
+                container.classList.add('staggered');
+                hiddenStaggered.value = 'true';
+            } else {
+                container.classList.remove('staggered');
+                hiddenStaggered.value = 'false';
+            }
+        });
+
+        // Curved toggle functionality - subtle arc with vertical offset only (no rotation)
+        function applyCurvedEffect() {
+            const container = document.querySelector('.chart-container');
+            const isCurved = container.classList.contains('curved');
+            const rows = document.querySelectorAll('.chart-row');
+            const numRows = rows.length;
+
+            rows.forEach((row, rowIndex) => {
+                const seats = row.querySelectorAll('.seat:not(.empty)');
+                const numSeats = seats.length;
+
+                // Arc intensity decreases for back rows (larger radius = flatter arc)
+                // Front rows (higher rowIndex) have more curve
+                const curveIntensity = 0.8 + (rowIndex * 0.4); // 0.8 to ~2.8 for 5 rows
+
+                seats.forEach((seat, index) => {
+                    if (isCurved && numSeats > 1) {
+                        // Calculate vertical offset using parabola (simple arc approximation)
+                        const center = (numSeats - 1) / 2;
+                        const offset = index - center;
+                        // Parabolic curve: y = k * x^2, where k controls steepness
+                        const yOffset = curveIntensity * offset * offset;
+
+                        seat.style.transform = `translateY(${yOffset}px)`;
+                    } else {
+                        seat.style.transform = '';
+                    }
+                });
+            });
+        }
+
+        document.getElementById('curved-toggle').addEventListener('change', function() {
+            const container = document.querySelector('.chart-container');
+            const hiddenCurved = document.querySelector('input[name="curved"]');
+            if (this.checked) {
+                container.classList.add('curved');
+                hiddenCurved.value = 'true';
+            } else {
+                container.classList.remove('curved');
+                hiddenCurved.value = 'false';
+            }
+            applyCurvedEffect();
+        });
+
+        // Apply curved effect on load if enabled
+        applyCurvedEffect();
+
+        // Height toggle functionality
+        document.getElementById('height-toggle').addEventListener('change', function() {
+            const container = document.querySelector('.chart-container');
+            if (this.checked) {
+                container.classList.remove('hide-heights');
+            } else {
+                container.classList.add('hide-heights');
+            }
+        });
+
+        // Drag and drop functionality
+        const partOrder = {{ part_order | tojson }};
+        let selectedSeat = null;
+
+        function getPartIndex(voicePart) {
+            const idx = partOrder.indexOf(voicePart);
+            return idx >= 0 ? idx : 0;
+        }
+
+        function updateSeatDisplay(seatEl, singerData) {
+            // Get seat position number (1-indexed)
+            const seatNum = parseInt(seatEl.dataset.pos) + 1;
+
+            if (singerData) {
+                const partIdx = getPartIndex(singerData.voice_part);
+                seatEl.className = `seat part-${partIdx} draggable`;
+                seatEl.draggable = true;
+                seatEl.dataset.singer = JSON.stringify(singerData);
+
+                // Format height
+                const feet = Math.floor(singerData.height / 12);
+                const inches = singerData.height % 12;
+                let heightStr;
+                if (inches % 1 === 0.5) {
+                    heightStr = `${feet}'${Math.floor(inches)}.5"`;
+                } else {
+                    heightStr = `${feet}'${Math.floor(inches)}"`;
+                }
+
+                seatEl.innerHTML = `
+                    <span class="seat-number">${seatNum}</span>
+                    <span class="singer-name">${singerData.name}</span>
+                    <span class="singer-info"><span class="singer-part">${singerData.voice_part}</span><span class="singer-height"> | ${heightStr}</span></span>
+                `;
+            } else {
+                seatEl.className = 'seat empty';
+                seatEl.draggable = false;
+                seatEl.dataset.singer = 'null';
+                seatEl.innerHTML = `<span class="seat-number">${seatNum}</span>`;
+            }
+        }
+
+        function swapSeats(seat1, seat2) {
+            const singer1 = seat1.dataset.singer !== 'null' ? JSON.parse(seat1.dataset.singer) : null;
+            const singer2 = seat2.dataset.singer !== 'null' ? JSON.parse(seat2.dataset.singer) : null;
+
+            updateSeatDisplay(seat1, singer2);
+            updateSeatDisplay(seat2, singer1);
+
+            updateChartData();
+            applyCurvedEffect();
+        }
+
+        function updateChartData() {
+            const rows = document.querySelectorAll('.chart-row');
+            const chartData = [];
+
+            rows.forEach((rowEl, rowIdx) => {
+                const seats = rowEl.querySelectorAll('.seat');
+                const rowData = [];
+
+                seats.forEach((seatEl, posIdx) => {
+                    const singerStr = seatEl.dataset.singer;
+                    const singer = singerStr !== 'null' ? JSON.parse(singerStr) : null;
+
+                    rowData.push({
+                        row: rowIdx,
+                        position: posIdx,
+                        singer: singer
+                    });
+                });
+
+                chartData.push(rowData);
+            });
+
+            // Base64 encode
+            const jsonStr = JSON.stringify(chartData);
+            const encoded = btoa(jsonStr);
+            document.getElementById('chart_data').value = encoded;
+        }
+
+        // Drag and drop events
+        document.querySelectorAll('.seat').forEach(seat => {
+            seat.addEventListener('dragstart', (e) => {
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            seat.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            });
+
+            seat.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                e.currentTarget.classList.add('drag-over');
+            });
+
+            seat.addEventListener('dragleave', (e) => {
+                e.currentTarget.classList.remove('drag-over');
+            });
+
+            seat.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove('drag-over');
+                const dragging = document.querySelector('.dragging');
+                if (dragging && dragging !== e.currentTarget) {
+                    swapSeats(dragging, e.currentTarget);
+                }
+            });
+
+            // Click to select/swap
+            seat.addEventListener('click', (e) => {
+                if (selectedSeat === null) {
+                    selectedSeat = e.currentTarget;
+                    selectedSeat.classList.add('selected');
+                } else if (selectedSeat === e.currentTarget) {
+                    selectedSeat.classList.remove('selected');
+                    selectedSeat = null;
+                } else {
+                    swapSeats(selectedSeat, e.currentTarget);
+                    selectedSeat.classList.remove('selected');
+                    selectedSeat = null;
+                }
+            });
+
+            // Double-click to edit voice part
+            seat.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                const seatEl = e.currentTarget;
+                if (seatEl.dataset.singer === 'null') return;
+
+                // Clear any selection
+                if (selectedSeat) {
+                    selectedSeat.classList.remove('selected');
+                    selectedSeat = null;
+                }
+
+                const singer = JSON.parse(seatEl.dataset.singer);
+                openModal(seatEl, singer);
+            });
+        });
+
+        // Modal functionality
+        let editingSeat = null;
+
+        function openModal(seatEl, singer) {
+            editingSeat = seatEl;
+            document.getElementById('modal-name').textContent = singer.name;
+            document.getElementById('modal-part').value = singer.voice_part;
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            editingSeat = null;
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        function savePart() {
+            if (!editingSeat) return;
+
+            const singer = JSON.parse(editingSeat.dataset.singer);
+            const newPart = document.getElementById('modal-part').value;
+
+            if (newPart !== singer.voice_part) {
+                singer.voice_part = newPart;
+                updateSeatDisplay(editingSeat, singer);
+                updateChartData();
+            }
+
+            closeModal();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('edit-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'edit-modal') {
+                closeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

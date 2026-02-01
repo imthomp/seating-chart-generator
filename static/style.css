@@ -1,0 +1,781 @@
+/* Base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+    overflow-x: auto;
+}
+
+.container-narrow {
+    max-width: 600px;
+}
+
+h1 {
+    color: #1a1a2e;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+}
+
+h2 {
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+h3, h4 {
+    color: #4a4a4a;
+    margin-bottom: 0.5rem;
+}
+
+/* Cards */
+.card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.card ul {
+    margin: 1rem 0 1.5rem 1.5rem;
+}
+
+.card li {
+    margin-bottom: 0.25rem;
+    color: #555;
+}
+
+/* Flash messages */
+.flash-messages {
+    margin-bottom: 1.5rem;
+}
+
+.flash-message {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-width: 140px;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-success {
+    background-color: #16a34a;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #15803d;
+}
+
+.btn-secondary {
+    background-color: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #4b5563;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+/* Legacy button classes for compatibility */
+button, .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    min-width: 140px;
+    background-color: #2563eb;
+    color: white;
+}
+
+button:hover, .button:hover {
+    background-color: #1d4ed8;
+}
+
+.button.primary {
+    background-color: #16a34a;
+}
+
+.button.primary:hover {
+    background-color: #15803d;
+}
+
+.button.secondary {
+    background-color: #6b7280;
+}
+
+.button.secondary:hover {
+    background-color: #4b5563;
+}
+
+/* File input */
+.file-input-wrapper {
+    margin-bottom: 1rem;
+}
+
+.file-input-wrapper input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.file-input-wrapper input[type="file"]:hover {
+    border-color: #2563eb;
+}
+
+.file-label {
+    display: none;
+}
+
+.upload-form {
+    margin-top: 1.5rem;
+}
+
+/* Example CSV */
+.example-csv {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.example-csv h4 {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.example-csv pre {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+}
+
+/* Form elements */
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section h2 {
+    margin-bottom: 0.5rem;
+}
+
+.form-section > p {
+    color: #6b7280;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.form-group input::placeholder {
+    color: #9ca3af;
+}
+
+.input-hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+/* Radio options */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.radio-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.radio-option:hover {
+    border-color: #2563eb;
+    background-color: #f8fafc;
+}
+
+.radio-option input[type="radio"] {
+    margin-top: 0.25rem;
+    accent-color: #2563eb;
+}
+
+.radio-option:has(input:checked) {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.radio-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.radio-label strong {
+    color: #1a1a2e;
+}
+
+.radio-desc {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* Checkbox options */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.checkbox-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #2563eb;
+}
+
+/* Detected parts */
+.detected-parts {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.part-tag {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin: 0.25rem;
+    font-weight: 500;
+}
+
+/* Order input */
+.order-input {
+    margin-top: 1rem;
+}
+
+.order-input label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #374151;
+}
+
+.order-input input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.order-input input[type="text"]:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+/* Dimension inputs */
+.dimension-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Form actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 0.5rem;
+}
+
+/* Config form */
+.config-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Page header */
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Chart wrapper */
+.chart-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-wrapper.flipped {
+    flex-direction: column-reverse;
+}
+
+.chart-wrapper.flipped .stage-label {
+    border-radius: 10px 10px 0 0;
+}
+
+.chart-wrapper.flipped .conductor-label {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+}
+
+.chart-wrapper.flipped .chart-container {
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+/* Stage label (legacy) */
+.stage-label {
+    text-align: center;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+    color: white;
+    padding: 0.75rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Conductor label (small square) */
+.conductor-label {
+    display: inline-block;
+    background: linear-gradient(135deg, #1e3a5f 0%, #2c3e50 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    margin-top: 0.75rem;
+}
+
+/* Chart container */
+.chart-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+}
+
+.chart-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.row-label {
+    width: 55px;
+    font-size: 0.75rem;
+    color: #6b7280;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+/* Seats */
+.seat {
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
+    height: 58px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.seat.empty {
+    display: none;
+}
+
+.singer-name {
+    font-weight: 600;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    color: #1a1a2e;
+}
+
+.singer-info {
+    font-size: 0.65rem;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+/* Chart panel - combined container for chart + legend */
+.chart-panel {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem 2rem;
+    overflow: visible;
+    min-width: fit-content;
+}
+
+.chart-panel .chart-container {
+    box-shadow: none;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+}
+
+.chart-footer {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: center;
+}
+
+/* Legend */
+.legend {
+    margin-top: 1.5rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.legend h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.legend-items {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 2px solid;
+}
+
+/* Height toggle */
+.hide-heights .singer-height {
+    display: none;
+}
+
+/* Actions bar */
+.actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.actions button,
+.actions .button,
+.actions .btn {
+    min-width: 160px;
+}
+
+/* Edit page specific */
+.edit-instructions {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.edit-instructions p {
+    margin: 0;
+    color: #92400e;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .dimension-inputs {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .card {
+        padding: 1.5rem;
+    }
+
+    .seat {
+        min-width: 100px;
+        height: 50px;
+    }
+
+    .singer-name {
+        font-size: 0.75rem;
+    }
+
+    .singer-info {
+        font-size: 0.65rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions button,
+    .form-actions .button,
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .actions button,
+    .actions .button,
+    .actions .btn {
+        width: 100%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print,
+    .page-header,
+    .edit-instructions,
+    .chart-options,
+    .actions,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0.5rem;
+        margin: 0;
+        overflow: visible;
+    }
+
+    .chart-panel {
+        box-shadow: none;
+        padding: 0.5rem;
+    }
+
+    .chart-wrapper {
+        margin: 0;
+        overflow: visible;
+    }
+
+    .chart-container {
+        box-shadow: none;
+        padding: 0;
+        overflow: visible;
+        border-radius: 0;
+    }
+
+    .chart-row {
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+
+    .seat {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        width: 85px;
+        min-width: 85px;
+        max-width: 85px;
+        height: 42px;
+    }
+
+    .seat.empty {
+        display: none;
+    }
+
+    .singer-name {
+        font-size: 0.65rem;
+    }
+
+    .singer-info {
+        font-size: 0.5rem;
+    }
+
+    .row-label {
+        width: 40px;
+        font-size: 0.6rem;
+    }
+
+    .chart-footer {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+
+    .legend {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        page-break-inside: avoid;
+    }
+
+    .legend h3 {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .legend-items {
+        gap: 1rem;
+    }
+
+    .legend-item {
+        font-size: 0.7rem;
+    }
+
+    .legend-color {
+        width: 14px;
+        height: 14px;
+    }
+
+    .stage-label {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .conductor-label {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.65rem;
+        margin-top: 0.5rem;
+    }
+}
