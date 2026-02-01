@@ -10,7 +10,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 
 from seating_algorithm import (
     Singer, generate_seating_chart, get_unique_parts,
-    calculate_dimensions_with_user_input, generate_random_roster
+    calculate_dimensions_with_user_input, generate_random_roster,
+    calculate_min_width
 )
 
 app = Flask(__name__)
@@ -170,6 +171,13 @@ def generate_chart_from_form() -> dict:
         rows, seats_per_row = calculate_dimensions_with_user_input(
             len(singers), len(part_order), layout, user_rows, user_max_per_row
         )
+
+        # For side-by-side layout, ensure seats_per_row is large enough
+        # to handle per-part column widths (cumulative rounding can exceed initial calc)
+        if layout == 'side-by-side':
+            min_width = calculate_min_width(singers, part_order, rows)
+            seats_per_row = max(seats_per_row, min_width)
+
         chart = generate_seating_chart(singers, rows, seats_per_row, part_order, layout)
 
     # Get display options

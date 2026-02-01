@@ -282,6 +282,29 @@ def _place_section(chart: List[List[Seat]], singers: List[Singer],
                 singer_idx += 1
 
 
+def calculate_min_width(singers: List[Singer], part_order: List[str], rows: int) -> int:
+    """
+    Calculate the minimum seats_per_row needed for side-by-side layout.
+
+    This accounts for per-part column widths which can exceed ceil(total/rows)
+    due to cumulative rounding.
+    """
+    # Count singers per part
+    part_counts = {part: 0 for part in part_order}
+    for singer in singers:
+        if singer.voice_part in part_counts:
+            part_counts[singer.voice_part] += 1
+
+    # Calculate width needed for each part
+    total_width = 0
+    for part in part_order:
+        count = part_counts[part]
+        width = math.ceil(count / rows) if count > 0 else 0
+        total_width += width
+
+    return total_width
+
+
 def calculate_chart_dimensions(num_singers: int, num_parts: int, layout: str) -> tuple[int, int]:
     """
     Calculate reasonable row and seat counts for a given number of singers.
