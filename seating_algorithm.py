@@ -12,11 +12,13 @@ from typing import List, Optional
 class Singer:
     name: str
     voice_part: str
-    height: float  # in inches
+    height: Optional[float] = None  # in inches, None if unknown
 
     @property
     def height_display(self) -> str:
-        """Return height formatted as feet'inches", supporting half inches."""
+        """Return height formatted as feet'inches", or empty string if unknown."""
+        if self.height is None:
+            return ""
         feet = int(self.height // 12)
         remaining_inches = self.height % 12
         # Check if we have a half inch
@@ -68,9 +70,16 @@ def generate_seating_chart(
         if part in groups:
             groups[part].append(singer)
 
-    # Sort each group by height (tallest first for back rows)
+    # Sort each group by height (tallest first for back rows).
+    # Singers with no height are placed in the middle of the group.
     for part in groups:
-        groups[part].sort(key=lambda s: s.height, reverse=True)
+        known = sorted(
+            [s for s in groups[part] if s.height is not None],
+            key=lambda s: s.height, reverse=True
+        )
+        unknown = [s for s in groups[part] if s.height is None]
+        mid = len(known) // 2
+        groups[part] = known[:mid] + unknown + known[mid:]
 
     # Initialize empty chart with variable row sizes
     chart = []
@@ -417,14 +426,20 @@ def generate_random_roster(
     if seed is not None:
         random.seed(seed)
 
-    # Gendered first names based on voice part
+    # First names by gender
     female_names = [
         "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan",
         "Jessica", "Sarah", "Karen", "Emma", "Ava", "Sophia", "Isabella", "Mia",
         "Charlotte", "Amelia", "Harper", "Evelyn", "Abigail", "Emily", "Ella",
         "Madison", "Scarlett", "Victoria", "Grace", "Chloe", "Lily", "Hannah",
         "Natalie", "Zoe", "Leah", "Hazel", "Violet", "Aurora", "Savannah",
-        "Audrey", "Brooklyn", "Bella", "Claire", "Lucy", "Anna", "Caroline"
+        "Audrey", "Bella", "Claire", "Lucy", "Anna", "Caroline",
+        # Diverse additions
+        "Maria", "Sofia", "Fatima", "Aisha", "Yuki", "Mei", "Priya", "Amara",
+        "Zara", "Layla", "Nadia", "Rosa", "Valentina", "Camila", "Aaliyah",
+        "Keiko", "Sasha", "Ingrid", "Chiara", "Lena", "Yasmin", "Nour",
+        "Xiomara", "Adaeze", "Taraji", "Esperanza", "Miriam", "Hana", "Ines",
+        "Celestine", "Amina", "Rania", "Yolanda", "Bianca", "Svetlana"
     ]
 
     male_names = [
@@ -433,7 +448,13 @@ def generate_random_roster(
         "Logan", "Alexander", "Ethan", "Jacob", "Liam", "Noah", "Aiden",
         "Benjamin", "Henry", "Sebastian", "Jack", "Daniel", "Matthew", "Owen",
         "Ryan", "Nathan", "Connor", "Andrew", "Isaac", "Joshua", "Dylan",
-        "Luke", "Gabriel", "Anthony", "Christian", "Jonathan", "Samuel", "Eric"
+        "Luke", "Gabriel", "Anthony", "Christian", "Jonathan", "Samuel", "Eric",
+        # Diverse additions
+        "Carlos", "Mateo", "Diego", "Jamal", "Andre", "Kwame", "Rafael",
+        "Hiroshi", "Wei", "Arjun", "Ibrahim", "Omar", "Luca", "Nikolai",
+        "Tomas", "Ezra", "Kofi", "Malik", "Santiago", "Jin", "Ravi", "Ahmed",
+        "Emeka", "Soren", "Dmitri", "Tariq", "Yusuf", "Pascal", "Desmond",
+        "Oluwaseun", "Alejandro", "Takeshi", "Vikram", "Bastian", "Seamus"
     ]
 
     last_names = [
@@ -442,20 +463,32 @@ def generate_random_roster(
         "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
         "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark",
         "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King",
-        "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green"
+        "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores", "Green",
+        # Diverse additions
+        "Kim", "Chen", "Park", "Patel", "Singh", "Kumar", "Ali", "Khan",
+        "Hassan", "Okafor", "Mensah", "Diallo", "Rosario", "Santos", "Reyes",
+        "Romero", "Nakamura", "Tanaka", "Yamamoto", "Ivanov", "Johansson",
+        "Mueller", "Bianchi", "Dubois", "Osei", "Achebe", "Kowalski",
+        "Petrov", "Andersen", "Fernandez", "Adeyemi", "Wakahisa", "Abubakar"
     ]
 
-    def is_female_part(part: str) -> bool:
-        """Determine if a voice part is typically female."""
+    def get_gender(part: str):
+        """Return 'female', 'male', or None (random) based on voice part."""
         part_lower = part.lower()
-        return any(p in part_lower for p in ['soprano', 'alto', 'mezzo'])
+        if any(p in part_lower for p in ['soprano', 'alto', 'mezzo']):
+            return 'female'
+        if any(p in part_lower for p in ['tenor', 'baritone', 'bass', 'bari']):
+            return 'male'
+        return None  # Unknown part — pick randomly
 
     def get_name(part: str) -> str:
-        """Get a name appropriate for the voice part."""
-        if is_female_part(part):
+        gender = get_gender(part)
+        if gender == 'female':
             first = random.choice(female_names)
-        else:
+        elif gender == 'male':
             first = random.choice(male_names)
+        else:
+            first = random.choice(random.choice([female_names, male_names]))
         return f"{first} {random.choice(last_names)}"
 
     singers = []
@@ -471,12 +504,28 @@ def generate_random_roster(
                 height = round(base_height * 2) / 2
                 singers.append(Singer(name=name, voice_part=part, height=height))
     else:
-        # Round-robin distribution
-        for i in range(num_singers):
-            part = parts[i % len(parts)]
-            name = get_name(part)
-            base_height = random.uniform(min_h, max_h)
-            height = round(base_height * 2) / 2
-            singers.append(Singer(name=name, voice_part=part, height=height))
+        # Even distribution with ±5 variation per part
+        base = num_singers // len(parts)
+        extra = num_singers % len(parts)
+        counts = [base + (1 if i < extra else 0) for i in range(len(parts))]
+        for i in range(len(counts)):
+            counts[i] = max(1, counts[i] + random.randint(-5, 5))
+        # Adjust total back to num_singers
+        diff = num_singers - sum(counts)
+        while diff != 0:
+            i = random.randrange(len(counts))
+            if diff > 0:
+                counts[i] += 1
+                diff -= 1
+            elif diff < 0 and counts[i] > 1:
+                counts[i] -= 1
+                diff += 1
+
+        for part, count in zip(parts, counts):
+            for _ in range(count):
+                name = get_name(part)
+                base_height = random.uniform(min_h, max_h)
+                height = round(base_height * 2) / 2
+                singers.append(Singer(name=name, voice_part=part, height=height))
 
     return singers

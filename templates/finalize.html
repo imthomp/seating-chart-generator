@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seating Chart</title>
+    <title>Seating Chart — ChoralChart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         {% set colors = [
@@ -68,6 +68,7 @@
     </style>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <div class="container">
         <div class="page-header">
             <h1>Seating Chart</h1>
@@ -86,7 +87,7 @@
                                     <div class="seat part-{{ part_idx }}">
                                         <span class="seat-number">{{ loop.index }}</span>
                                         <span class="singer-name">{{ seat.singer.name }}</span>
-                                        <span class="singer-info">{{ seat.singer.voice_part }} | {{ seat.singer.height_display }}</span>
+                                        <span class="singer-info">{{ seat.singer.voice_part }}{% if seat.singer.height_display %} | {{ seat.singer.height_display }}{% endif %}</span>
                                     </div>
                                 {% else %}
                                     <div class="seat empty">
@@ -129,5 +130,6 @@
             <button onclick="window.print()" class="btn btn-success">Export PDF</button>
         </div>
     </div>
+    {% include 'footer.html' %}
 </body>
 </html>

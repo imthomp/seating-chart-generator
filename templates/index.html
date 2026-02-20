@@ -3,12 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choir Seating Chart Generator</title>
+    <title>ChoralChart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .part-section {
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .part-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .part-section-header {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.35rem;
+        }
+        .part-section-header input[type="text"] {
+            flex: 1;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            transition: border-color 0.2s;
+        }
+        .part-section-header input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+        }
+        textarea.names-list {
+            width: 100%;
+            min-height: 72px;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            resize: vertical;
+            transition: border-color 0.2s;
+            line-height: 1.6;
+        }
+        textarea.names-list:focus {
+            outline: none;
+            border-color: #2563eb;
+            background: white;
+        }
+        textarea.names-list::placeholder {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+        .add-section-btn {
+            background: none;
+            border: 1px dashed #d1d5db;
+            border-radius: 6px;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            width: 100%;
+            margin-top: 0.5rem;
+            transition: all 0.15s;
+        }
+        .add-section-btn:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+        details.advanced {
+            margin-top: 1rem;
+        }
+        details.advanced > summary {
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            padding: 0.3rem 0;
+            user-select: none;
+            list-style: none;
+        }
+        details.advanced > summary::-webkit-details-marker { display: none; }
+        details.advanced > summary::before { content: '▶ '; font-size: 0.65rem; }
+        details.advanced[open] > summary::before { content: '▼ '; }
+        details.advanced > summary:hover { color: #6b7280; }
+        .part-section-header .btn-remove-row {
+            align-self: stretch;
+        }
+    </style>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <div class="container container-narrow">
-        <h1>Choir Seating Chart Generator</h1>
 
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -20,32 +109,96 @@
             {% endif %}
         {% endwith %}
 
-        <div class="card">
-            <h2>Upload Singer Roster</h2>
-            <p>Upload a CSV file with the following columns:</p>
-            <ul>
-                <li><strong>name</strong> - Singer's name</li>
-                <li><strong>voice_part</strong> - Voice part label (Soprano, Alto 1, Tenor 2, etc.)</li>
-                <li><strong>height</strong> - Height in inches (supports decimals like 66.5)</li>
-            </ul>
-
-            <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="upload-form">
-                <div class="file-input-wrapper">
-                    <input type="file" name="file" id="file" accept=".csv" required>
-                    <label for="file" class="file-label">Choose CSV file...</label>
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">Upload & Continue</button>
-            </form>
-
-            <div class="example-csv">
-                <h4>Example CSV Format</h4>
-                <pre>name,voice_part,height
-John Smith,Tenor 1,72
-Jane Doe,Soprano 2,64.5
-Bob Johnson,Bass,74
-Alice Brown,Alto 1,66.5</pre>
-            </div>
+        <div style="padding: 1.5rem 0 0.25rem;">
+            <h1 style="margin-bottom: 0.2rem;">Create a seating chart</h1>
+            <p class="subtitle">Enter your roster or generate a random one to get started.</p>
         </div>
+
+        <!-- Primary: Enter Roster -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <h2>Enter Your Roster</h2>
+            <p style="margin-bottom: 1rem;">Paste names one per line. Optionally add height: <em>John Smith, 5'10"</em></p>
+
+            <form action="{{ url_for('configure_post') }}" method="post">
+                <input type="hidden" name="entry_type" value="manual">
+                <div id="sections-list">
+                    <div class="part-section">
+                        <div class="part-section-header">
+                            <input type="text" name="part_name" placeholder="Voice part (e.g. Soprano)" required>
+                            <button type="button" class="btn-remove-row" onclick="removeSection(this)">✕</button>
+                        </div>
+                        <textarea class="names-list" name="part_names_list" placeholder="Jane Smith&#10;Alice Johnson, 5'4&quot;&#10;Mary Davis"></textarea>
+                    </div>
+                </div>
+                <button type="button" class="add-section-btn" id="add-section">+ Add Voice Part</button>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: 0.75rem;">Create Seating Chart</button>
+            </form>
+        </div>
+
+        <!-- Secondary: Random roster -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <h2>Try a Random Roster</h2>
+            <p>Generate placeholder singers to explore layout options.</p>
+
+            <form action="{{ url_for('configure_post') }}" method="post" class="upload-form">
+                <input type="hidden" name="entry_type" value="random">
+                <div class="form-group">
+                    <label for="num_singers">Number of singers:</label>
+                    <input type="number" id="num_singers" name="num_singers" placeholder="40" min="1" max="500">
+                </div>
+                <div class="form-group">
+                    <label for="parts">Voice parts (comma-separated):</label>
+                    <input type="text" id="parts" name="parts" placeholder="Soprano, Alto, Tenor, Bass">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Generate Random Roster</button>
+            </form>
+        </div>
+
+        <!-- Advanced: CSV upload -->
+        <details class="advanced">
+            <summary>Advanced: Upload a CSV file</summary>
+            <div class="card" style="margin-top: 0.5rem;">
+                <p>CSV with columns: <strong>name</strong>, <strong>voice_part</strong>, <strong>height</strong> (inches).</p>
+                <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data" class="upload-form">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="file" id="file" accept=".csv" required>
+                        <label for="file" class="file-label">Choose CSV file...</label>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-full">Upload & Continue</button>
+                </form>
+                <div class="example-csv">
+                    <h4>Example</h4>
+                    <pre>name,voice_part,height
+John Smith,Tenor 1,72
+Jane Doe,Soprano,64.5</pre>
+                </div>
+            </div>
+        </details>
     </div>
+
+    <script>
+        document.getElementById('add-section').addEventListener('click', () => {
+            const list = document.getElementById('sections-list');
+            const section = document.createElement('div');
+            section.className = 'part-section';
+            section.innerHTML = `
+                <div class="part-section-header">
+                    <input type="text" name="part_name" placeholder="Voice part" required>
+                    <button type="button" class="btn-remove-row" onclick="removeSection(this)">✕</button>
+                </div>
+                <textarea class="names-list" name="part_names_list" placeholder="Names, one per line"></textarea>
+            `;
+            list.appendChild(section);
+            section.querySelector('input[type="text"]').focus();
+        });
+
+        function removeSection(btn) {
+            const list = document.getElementById('sections-list');
+            if (list.querySelectorAll('.part-section').length > 1) {
+                btn.closest('.part-section').remove();
+            }
+        }
+    </script>
+    {% include 'footer.html' %}
 </body>
 </html>
