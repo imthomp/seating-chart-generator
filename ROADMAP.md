@@ -75,9 +75,8 @@ Ideas grouped by rough git branch scope. Sourced from personal brainstorming + u
 
 ---
 
-## `feature/hosting`
-- Deploy to a live site (GitHub Pages won't work for Flask — consider Railway, Render, or Fly.io)
-- This unlocks sharing and living documents
+## ~~`feature/hosting`~~ ✓ Done
+- Live at https://choralchart.onrender.com (Render, free tier)
 
 ---
 
