@@ -71,15 +71,6 @@
         .seat.aisle-before {
             margin-left: 40px;
         }
-        /* Curved rows - arc effect centered on conductor */
-        .chart-container.curved .chart-row {
-            justify-content: center;
-        }
-        .chart-container.curved .seat {
-            transform-origin: center 400px;
-            transition: transform 0.2s;
-        }
-
         /* Chart panel - combined container */
         .chart-panel {
             background: white;
@@ -239,10 +230,6 @@
                 <span>Stagger rows</span>
             </label>
             <label class="checkbox-option">
-                <input type="checkbox" id="curved-toggle" {% if curved %}checked{% endif %}>
-                <span>Curved rows</span>
-            </label>
-            <label class="checkbox-option">
                 <input type="checkbox" id="height-toggle" checked>
                 <span>Show heights</span>
             </label>
@@ -250,7 +237,7 @@
 
         <div class="chart-panel">
             <div class="chart-wrapper{% if flipped %} flipped{% endif %}">
-                <div class="chart-container{% if staggered %} staggered{% endif %}{% if curved %} curved{% endif %}" id="chart">
+                <div class="chart-container{% if staggered %} staggered{% endif %}" id="chart">
                     {% for row in chart %}
                         <div class="chart-row{% if stagger_offsets[loop.index0] %} stagger-offset{% endif %}">
                             <span class="row-label">Row {{ loop.revindex }}</span>
@@ -301,8 +288,7 @@
         <input type="hidden" name="num_singers" value="{{ num_singers }}">
         <input type="hidden" name="flipped" value="{{ 'true' if flipped else 'false' }}">
         <input type="hidden" name="staggered" value="{{ 'true' if staggered else 'false' }}">
-        <input type="hidden" name="curved" value="{{ 'true' if curved else 'false' }}">
-        <input type="hidden" name="aisle_after" value="{{ aisle_after or '' }}">
+<input type="hidden" name="aisle_after" value="{{ aisle_after or '' }}">
 
         <div class="actions">
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Start Over</a>
@@ -366,53 +352,6 @@
             }
         });
 
-        // Curved toggle functionality - subtle arc with vertical offset only (no rotation)
-        function applyCurvedEffect() {
-            const container = document.querySelector('.chart-container');
-            const isCurved = container.classList.contains('curved');
-            const rows = document.querySelectorAll('.chart-row');
-            const numRows = rows.length;
-
-            rows.forEach((row, rowIndex) => {
-                const seats = row.querySelectorAll('.seat:not(.empty)');
-                const numSeats = seats.length;
-
-                // Arc intensity decreases for back rows (larger radius = flatter arc)
-                // Front rows (higher rowIndex) have more curve
-                const curveIntensity = 0.8 + (rowIndex * 0.4); // 0.8 to ~2.8 for 5 rows
-
-                seats.forEach((seat, index) => {
-                    if (isCurved && numSeats > 1) {
-                        // Calculate vertical offset using parabola (simple arc approximation)
-                        const center = (numSeats - 1) / 2;
-                        const offset = index - center;
-                        // Parabolic curve: y = k * x^2, where k controls steepness
-                        const yOffset = curveIntensity * offset * offset;
-
-                        seat.style.transform = `translateY(${yOffset}px)`;
-                    } else {
-                        seat.style.transform = '';
-                    }
-                });
-            });
-        }
-
-        document.getElementById('curved-toggle').addEventListener('change', function() {
-            const container = document.querySelector('.chart-container');
-            const hiddenCurved = document.querySelector('input[name="curved"]');
-            if (this.checked) {
-                container.classList.add('curved');
-                hiddenCurved.value = 'true';
-            } else {
-                container.classList.remove('curved');
-                hiddenCurved.value = 'false';
-            }
-            applyCurvedEffect();
-        });
-
-        // Apply curved effect on load if enabled
-        applyCurvedEffect();
-
         // Height toggle functionality
         document.getElementById('height-toggle').addEventListener('change', function() {
             const container = document.querySelector('.chart-container');
@@ -474,7 +413,6 @@
 
             updateChartData();
             updateStaggerOffsets();
-            applyCurvedEffect();
         }
 
         function updateChartData() {
