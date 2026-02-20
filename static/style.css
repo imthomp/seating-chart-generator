@@ -12,11 +12,101 @@ body {
     line-height: 1.6;
 }
 
+/* Navbar */
+.navbar {
+    background: #f0f2f5;
+    padding: 1rem 2rem 0;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.nav-brand {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+}
+.nav-brand:hover {
+    color: #1d4ed8;
+}
+
+/* Roster entry table */
+.roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.5rem;
+}
+.roster-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    padding: 0 0.25rem 0.4rem;
+    font-weight: 500;
+}
+.roster-table td {
+    padding: 0.2rem 0.25rem;
+}
+.roster-table td input[type="text"],
+.roster-table td input[type="number"] {
+    width: 100%;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+.roster-table td input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+.roster-table td input::placeholder {
+    color: #9ca3af;
+}
+.roster-table td:last-child {
+    width: 2rem;
+}
+.btn-remove-row {
+    padding: 0.4rem 0.5rem;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #dc2626;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: all 0.15s;
+    min-width: unset;
+    flex-shrink: 0;
+}
+.btn-remove-row:hover {
+    background: #fecaca;
+}
+.add-singer-btn {
+    background: none;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 0.875rem;
+    width: 100%;
+    margin-top: 0.25rem;
+    transition: all 0.15s;
+}
+.add-singer-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
 .container {
     max-width: 100%;
     margin: 0 auto;
     padding: 2rem;
-    overflow-x: auto;
 }
 
 .container-narrow {

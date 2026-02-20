@@ -56,27 +56,52 @@ def upload():
         return redirect(url_for('index'))
 
 
-@app.route('/generate-random', methods=['POST'])
-def generate_random():
-    """Generate a random roster and show configuration page."""
+@app.route('/configure', methods=['POST'])
+def configure_post():
+    """Handle both manual entry and random roster, then show configuration page."""
     try:
-        num_singers = int(request.form.get('num_singers', 40))
-        parts_str = request.form.get('parts', 'Soprano,Alto,Tenor,Bass')
-        parts = [p.strip() for p in parts_str.split(',') if p.strip()]
+        entry_type = request.form.get('entry_type', 'manual')
 
-        if num_singers < 1 or num_singers > 500:
-            flash('Number of singers must be between 1 and 500')
-            return redirect(url_for('index'))
+        if entry_type == 'random':
+            num_singers_str = request.form.get('num_singers', '').strip()
+            num_singers = int(num_singers_str) if num_singers_str else 40
+            parts_str = request.form.get('parts', '').strip() or 'Soprano,Alto,Tenor,Bass'
+            parts = [p.strip() for p in parts_str.split(',') if p.strip()]
 
-        if not parts:
-            flash('Please specify at least one voice part')
-            return redirect(url_for('index'))
+            if num_singers < 1 or num_singers > 500:
+                flash('Number of singers must be between 1 and 500')
+                return redirect(url_for('index'))
 
-        singers = generate_random_roster(num_singers, parts)
+            if not parts:
+                flash('Please specify at least one voice part')
+                return redirect(url_for('index'))
+
+            singers = generate_random_roster(num_singers, parts)
+
+        else:
+            part_names = request.form.getlist('part_name')
+            part_name_lists = request.form.getlist('part_names_list')
+
+            singers = []
+            for part, names_block in zip(part_names, part_name_lists):
+                part = part.strip()
+                if not part:
+                    continue
+                for line in names_block.splitlines():
+                    line = line.strip()
+                    if line:
+                        name, height = parse_name_line(line)
+                        if name:
+                            singers.append(Singer(name=name, voice_part=part, height=height))
+
+            if not singers:
+                flash('Please add at least one singer name')
+                return redirect(url_for('index'))
+
         return show_configure_page(singers)
 
     except Exception as e:
-        flash(f'Error generating roster: {str(e)}')
+        flash(f'Error: {str(e)}')
         return redirect(url_for('index'))
 
 
@@ -321,6 +346,36 @@ def decode_chart(chart_json: str):
             ))
         chart.append(row)
     return chart
+
+
+def parse_name_line(line: str) -> tuple:
+    """
+    Parse a line that is either just a name, or 'Name, height'.
+    Height formats: 66, 66", 5'6, 5'6"
+    Returns (name, height_or_None).
+    """
+    idx = line.rfind(',')
+    if idx != -1:
+        name_part = line[:idx].strip()
+        height_part = line[idx + 1:].strip()
+        if height_part and name_part:
+            try:
+                return name_part, _parse_height(height_part)
+            except ValueError:
+                pass
+    return line.strip(), None
+
+
+def _parse_height(s: str) -> float:
+    """Parse height from strings like '66', '66"', '5\'6"', '5\'6'."""
+    s = s.strip().rstrip('"').strip()
+    if "'" in s:
+        parts = s.split("'", 1)
+        feet = int(parts[0].strip())
+        inches_str = parts[1].strip().rstrip('"').strip()
+        inches = float(inches_str) if inches_str else 0.0
+        return feet * 12 + inches
+    return float(s)
 
 
 def parse_csv(content: str) -> list[Singer]:

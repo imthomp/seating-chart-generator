@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seating Chart</title>
+    <title>Edit Chart — ChoralChart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         {% set colors = [
             ('#e3f2fd', '#64b5f6'),
@@ -77,12 +78,16 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             padding: 1.5rem;
-            overflow: visible;
+            overflow-x: auto;
+            min-width: 0;
         }
         .chart-container {
             box-shadow: none;
             padding: 0;
             background: transparent;
+            overflow: visible;
+            width: max-content;
+            min-width: 100%;
         }
         .chart-wrapper {
             display: flex;
@@ -187,9 +192,10 @@
     </style>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <div class="container">
         <div class="page-header">
-            <h1>Seating Chart</h1>
+            <h1>Edit Chart</h1>
             <p class="subtitle">{{ num_singers }} singers | {{ rows }} rows</p>
         </div>
 
@@ -252,7 +258,7 @@
                                          data-singer='{{ {"name": seat.singer.name, "voice_part": seat.singer.voice_part, "height": seat.singer.height} | tojson }}'>
                                         <span class="seat-number">{{ loop.index }}</span>
                                         <span class="singer-name">{{ seat.singer.name }}</span>
-                                        <span class="singer-info"><span class="singer-part">{{ seat.singer.voice_part }}</span><span class="singer-height"> | {{ seat.singer.height_display }}</span></span>
+                                        <span class="singer-info"><span class="singer-part">{{ seat.singer.voice_part }}</span>{% if seat.singer.height_display %}<span class="singer-height"> | {{ seat.singer.height_display }}</span>{% endif %}</span>
                                     </div>
                                 {% else %}
                                     <div class="seat empty{% if is_after_aisle %} aisle-before{% endif %}"
@@ -292,7 +298,7 @@
 
         <div class="actions">
             <a href="{{ url_for('index') }}" class="btn btn-secondary">Start Over</a>
-            <button type="button" onclick="window.print()" class="btn btn-success">Export PDF</button>
+            <button type="button" onclick="exportImage()" class="btn btn-success">Save as Image</button>
         </div>
     </div>
 
@@ -549,6 +555,33 @@
                 closeModal();
             }
         });
+
+        // Export chart as PNG image (full scrollable area, not just visible portion)
+        function exportImage() {
+            const panel = document.querySelector('.chart-panel');
+            const fullW = panel.scrollWidth;
+            const fullH = panel.scrollHeight;
+
+            html2canvas(panel, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                width: fullW,
+                height: fullH,
+                onclone: (clonedDoc) => {
+                    const p = clonedDoc.querySelector('.chart-panel');
+                    p.style.overflow = 'visible';
+                    p.style.width = fullW + 'px';
+                    p.style.height = fullH + 'px';
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'seating-chart.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
     </script>
+    {% include 'footer.html' %}
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configure Seating Chart</title>
+    <title>Configure — ChoralChart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         .part-order-list {
@@ -46,6 +46,7 @@
     </style>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <div class="container container-narrow">
         <h1>Configure Seating Chart</h1>
         <p class="subtitle">{{ num_singers }} singers loaded</p>
@@ -60,10 +61,10 @@
             {% endif %}
         {% endwith %}
 
-        <form action="{{ url_for('preview') }}" method="post" class="config-form">
+        <form action="{{ url_for('edit') }}" method="post" class="config-form">
             <input type="hidden" name="singers_data" value="{{ singers_data }}">
-
             <input type="hidden" name="layout" value="side-by-side">
+            <input type="hidden" name="staggered" value="true">
 
             <div class="form-section">
                 <h2>Voice Part Order</h2>
@@ -109,7 +110,7 @@
 
             <div class="form-actions">
                 <a href="{{ url_for('index') }}" class="btn btn-secondary">Start Over</a>
-                <button type="submit" class="btn btn-primary">Preview Chart</button>
+                <button type="submit" class="btn btn-primary">Generate Chart</button>
             </div>
         </form>
     </div>
@@ -166,5 +167,6 @@
             });
         });
     </script>
+    {% include 'footer.html' %}
 </body>
 </html>
