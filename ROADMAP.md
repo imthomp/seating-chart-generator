@@ -4,11 +4,13 @@ Ideas grouped by rough git branch scope. Sourced from personal brainstorming + u
 
 ---
 
-## `fix/curved-rows`
-- Row labels way off in curved mode
-- Flipped version broken in curved mode
-- Everything shifts slightly left when curved is toggled
-- Closer seat spacing in curved rows
+## `feature/curved-rows` ⏸ Tabled
+- Curved rows toggle removed from UI — feature exists on the `feature/curved-rows` branch
+- Known issues to fix before re-introducing:
+  - Row labels way off in curved mode
+  - Flipped version broken in curved mode
+  - Everything shifts slightly left when curved is toggled
+  - Closer seat spacing in curved rows
 
 ---
 
